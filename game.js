@@ -221,6 +221,11 @@ class World {
         this.getRoom('market').items.push({ name: 'Apple', type: 'food', effect: 'heal', value: 5 });
         this.getRoom('forest_clearing').items.push({ name: 'Healing Herb', type: 'herb', effect: 'heal', value: 15 });
         this.getRoom('cave_entrance').items.push({ name: 'Rusty Sword', type: 'weapon', damage: 5, value: 10 });
+
+        // Add enemies to dangerous areas
+        this.getRoom('forest_path').enemies.push(new Enemy('Wolf', 1, 30, 8, 20, 5));
+        this.getRoom('forest_clearing').enemies.push(new Enemy('Giant Spider', 2, 50, 12, 35, 10));
+        this.getRoom('cave_entrance').enemies.push(new Enemy('Cave Troll', 3, 80, 18, 60, 25));
     }
 
     addRoom(room) {
@@ -271,6 +276,12 @@ class CommandParser {
             'use': (args) => this.use(args),
             'rest': () => this.rest(),
 
+            // Combat
+            'attack': () => this.attack(),
+            'fight': () => this.attack(),
+            'flee': () => this.flee(),
+            'run': () => this.flee(),
+
             // System
             'help': () => this.help(),
             'save': () => this.save(),
@@ -281,7 +292,9 @@ class CommandParser {
     parse(input) {
         if (!input || input.trim() === '') return;
 
-        const parts = input.trim().toLowerCase().split(' ');
+        // Try NLP processing first
+        const normalized = nlp.normalize(input);
+        const parts = normalized.trim().toLowerCase().split(' ');
         const command = parts[0];
         const args = parts.slice(1).join(' ');
 
@@ -384,20 +397,50 @@ class CommandParser {
         return { type: 'success', text: 'You rest for a moment, recovering some health and mana.' };
     }
 
+    attack() {
+        // Check if there are enemies in the room
+        const room = this.gameState.currentRoom;
+
+        if (combatManager.inCombat) {
+            return combatManager.playerAttack();
+        }
+
+        if (room.enemies.length > 0) {
+            // Start combat with first enemy
+            const enemy = room.enemies[0];
+            return combatManager.startCombat(enemy);
+        }
+
+        return { type: 'error', text: 'There is nothing to fight here.' };
+    }
+
+    flee() {
+        return combatManager.flee();
+    }
+
     help() {
         const helpText = `
 Available Commands:
 ─────────────────────────────────
-Movement: north (n), south (s), east (e), west (w)
-Observe:  look (l), examine <item>
-Items:    inventory (i), take <item>, drop <item>, use <item>
+Movement:  north (n), south (s), east (e), west (w)
+           You can also say "go north", "walk south", etc.
+
+Observe:   look (l), examine <item>
+
+Items:     inventory (i), take/get <item>, drop <item>, use <item>
+
 Character: stats, rest
-System:   help, save, clear
+
+Combat:    attack/fight - Engage or continue fighting an enemy
+           flee/run - Escape from combat
+
+System:    help, save, clear
 
 Tips:
-- Explore the world and interact with items
+- Some areas have enemies - be prepared to fight!
+- Use items to heal during or after combat
 - Rest to recover health and mana
-- Type 'look' to see your surroundings
+- Natural language supported: try "grab apple" or "walk north"
         `;
         return { type: 'help', text: helpText };
     }
@@ -455,6 +498,8 @@ class UIManager {
 
         switch (result.type) {
             case 'move':
+                soundManager.play('move');
+                particleManager.showEffect('move');
                 this.addOutput('success', `You travel ${result.room.name}.`);
                 this.addOutput('', '');
                 this.displayRoom(result.room);
@@ -467,11 +512,18 @@ class UIManager {
                 break;
 
             case 'examine':
+                this.addOutput('success', result.text);
+                break;
+
             case 'success':
+                soundManager.play('success');
+                particleManager.showEffect('success');
                 this.addOutput('success', result.text);
                 break;
 
             case 'error':
+                soundManager.play('error');
+                particleManager.showEffect('error');
                 this.addOutput('error', result.text);
                 break;
 
@@ -481,6 +533,26 @@ class UIManager {
 
             case 'stats':
                 this.displayStats(result.player);
+                break;
+
+            case 'combat':
+                soundManager.play('combat');
+                particleManager.showEffect('combat');
+                this.addOutput('combat', result.text);
+
+                if (result.victory) {
+                    soundManager.play('success');
+                    particleManager.showEffect('levelup');
+                    // Remove defeated enemy from room
+                    const room = this.gameState.currentRoom;
+                    room.enemies.shift();
+                }
+
+                if (result.defeat) {
+                    soundManager.play('error');
+                    this.updateLocation();
+                    this.renderMap();
+                }
                 break;
 
             case 'help':
@@ -499,6 +571,11 @@ class UIManager {
     displayRoom(room) {
         this.addOutput('room-title', room.name);
         this.addOutput('room-desc', room.description);
+
+        if (room.enemies.length > 0) {
+            const enemyList = room.enemies.map(e => `${e.name} (Level ${e.level})`).join(', ');
+            this.addOutput('warning', `⚠️ Enemies here: ${enemyList}`);
+        }
 
         if (room.items.length > 0) {
             this.addOutput('', `Items here: ${room.items.map(i => i.name).join(', ')}`);
@@ -645,13 +722,301 @@ class UIManager {
 }
 
 // ===========================
+// Sound Effects Manager
+// ===========================
+class SoundManager {
+    constructor() {
+        this.enabled = localStorage.getItem('soundEnabled') !== 'false';
+        this.context = null;
+        this.sounds = {};
+        this.initAudioContext();
+    }
+
+    initAudioContext() {
+        try {
+            this.context = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Web Audio API not supported');
+        }
+    }
+
+    playTone(frequency, duration, type = 'sine', volume = 0.3) {
+        if (!this.enabled || !this.context) return;
+
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = type;
+
+        gainNode.gain.setValueAtTime(volume, this.context.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
+
+        oscillator.start(this.context.currentTime);
+        oscillator.stop(this.context.currentTime + duration);
+    }
+
+    play(soundName) {
+        if (!this.enabled) return;
+
+        const sounds = {
+            'move': () => this.playTone(440, 0.1, 'sine', 0.2),
+            'pickup': () => this.playTone(660, 0.15, 'sine', 0.3),
+            'drop': () => this.playTone(330, 0.15, 'sine', 0.2),
+            'error': () => this.playTone(200, 0.2, 'sawtooth', 0.3),
+            'success': () => {
+                this.playTone(523, 0.1, 'sine', 0.25);
+                setTimeout(() => this.playTone(659, 0.15, 'sine', 0.25), 100);
+            },
+            'combat': () => this.playTone(220, 0.2, 'square', 0.3),
+            'levelup': () => {
+                this.playTone(523, 0.1, 'sine', 0.3);
+                setTimeout(() => this.playTone(659, 0.1, 'sine', 0.3), 100);
+                setTimeout(() => this.playTone(784, 0.2, 'sine', 0.3), 200);
+            },
+            'heal': () => {
+                this.playTone(659, 0.1, 'sine', 0.2);
+                setTimeout(() => this.playTone(784, 0.15, 'sine', 0.2), 80);
+            }
+        };
+
+        if (sounds[soundName]) {
+            sounds[soundName]();
+        }
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('soundEnabled', this.enabled);
+        return this.enabled;
+    }
+}
+
+// ===========================
+// Particle Effects Manager
+// ===========================
+class ParticleManager {
+    createParticle(x, y, emoji, duration = 2000) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = emoji;
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+
+        document.body.appendChild(particle);
+
+        setTimeout(() => {
+            particle.remove();
+        }, duration);
+    }
+
+    showEffect(type) {
+        const x = Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.1;
+        const y = Math.random() * window.innerHeight * 0.5 + window.innerHeight * 0.2;
+
+        const effects = {
+            'move': '👟',
+            'pickup': '📦',
+            'drop': '⬇️',
+            'combat': '⚔️',
+            'damage': '💥',
+            'heal': '💚',
+            'levelup': '⭐',
+            'gold': '💰',
+            'success': '✓',
+            'error': '❌'
+        };
+
+        this.createParticle(x, y, effects[type] || '✨');
+    }
+}
+
+// ===========================
+// Enemy Class
+// ===========================
+class Enemy {
+    constructor(name, level, hp, damage, xpReward, goldReward) {
+        this.name = name;
+        this.level = level;
+        this.hp = hp;
+        this.maxHp = hp;
+        this.damage = damage;
+        this.xpReward = xpReward;
+        this.goldReward = goldReward;
+    }
+
+    takeDamage(amount) {
+        this.hp = Math.max(0, this.hp - amount);
+        return this.hp <= 0;
+    }
+
+    attack() {
+        return Math.floor(this.damage * (0.8 + Math.random() * 0.4));
+    }
+}
+
+// ===========================
+// Combat Manager
+// ===========================
+class CombatManager {
+    constructor(gameState) {
+        this.gameState = gameState;
+        this.currentEnemy = null;
+        this.inCombat = false;
+    }
+
+    startCombat(enemy) {
+        this.currentEnemy = enemy;
+        this.inCombat = true;
+        return {
+            type: 'combat',
+            text: `⚔️ A ${enemy.name} (Level ${enemy.level}) appears!\n   HP: ${enemy.hp}/${enemy.maxHp}`,
+            enemy: enemy
+        };
+    }
+
+    playerAttack() {
+        if (!this.inCombat || !this.currentEnemy) {
+            return { type: 'error', text: 'You are not in combat!' };
+        }
+
+        const player = this.gameState.player;
+        const damage = Math.floor((player.stats.str * 2 + player.level * 3) * (0.8 + Math.random() * 0.4));
+
+        const enemyDead = this.currentEnemy.takeDamage(damage);
+
+        let result = { type: 'combat', text: `You strike the ${this.currentEnemy.name} for ${damage} damage!` };
+
+        if (enemyDead) {
+            player.gainXp(this.currentEnemy.xpReward);
+            player.gold += this.currentEnemy.goldReward;
+
+            result.text += `\n\n💀 The ${this.currentEnemy.name} is defeated!`;
+            result.text += `\n   +${this.currentEnemy.xpReward} XP, +${this.currentEnemy.goldReward} Gold`;
+
+            this.inCombat = false;
+            this.currentEnemy = null;
+            result.victory = true;
+        } else {
+            // Enemy counter-attacks
+            const enemyDamage = this.currentEnemy.attack();
+            const playerDead = player.takeDamage(enemyDamage);
+
+            result.text += `\n   ${this.currentEnemy.name} HP: ${this.currentEnemy.hp}/${this.currentEnemy.maxHp}`;
+            result.text += `\n\nThe ${this.currentEnemy.name} attacks you for ${enemyDamage} damage!`;
+            result.text += `\n   Your HP: ${player.hp}/${player.maxHp}`;
+
+            if (playerDead) {
+                result.text += `\n\n💀 You have been defeated! Respawning...`;
+                player.hp = player.maxHp;
+                player.mp = player.maxMp;
+                this.inCombat = false;
+                this.currentEnemy = null;
+                this.gameState.currentRoom = this.gameState.world.getRoom('town_square');
+                result.defeat = true;
+            }
+        }
+
+        return result;
+    }
+
+    flee() {
+        if (!this.inCombat) {
+            return { type: 'error', text: 'You are not in combat!' };
+        }
+
+        this.inCombat = false;
+        this.currentEnemy = null;
+        return { type: 'success', text: 'You flee from combat!' };
+    }
+}
+
+// ===========================
+// Enhanced Command Parser with NLP
+// ===========================
+class NaturalLanguageParser {
+    constructor() {
+        this.synonyms = {
+            'go': ['move', 'walk', 'travel', 'head', 'run'],
+            'take': ['get', 'pick', 'grab', 'acquire', 'collect'],
+            'look': ['examine', 'inspect', 'view', 'see', 'observe', 'check'],
+            'use': ['consume', 'eat', 'drink', 'apply'],
+            'attack': ['fight', 'hit', 'strike', 'kill', 'slay', 'battle'],
+            'talk': ['speak', 'chat', 'say', 'tell', 'ask']
+        };
+
+        this.directionWords = {
+            'n': 'north', 'north': 'north',
+            's': 'south', 'south': 'south',
+            'e': 'east', 'east': 'east',
+            'w': 'west', 'west': 'west'
+        };
+    }
+
+    normalize(input) {
+        const words = input.toLowerCase().split(/\s+/);
+        const normalized = [];
+
+        for (const word of words) {
+            // Check if it's a direction
+            if (this.directionWords[word]) {
+                normalized.push(this.directionWords[word]);
+                continue;
+            }
+
+            // Check synonyms
+            let found = false;
+            for (const [base, syns] of Object.entries(this.synonyms)) {
+                if (syns.includes(word) || word === base) {
+                    normalized.push(base);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                normalized.push(word);
+            }
+        }
+
+        return normalized.join(' ');
+    }
+
+    extractIntent(input) {
+        const patterns = [
+            { regex: /^(go|move|walk|travel|head)\s+(north|south|east|west|n|s|e|w)$/i, intent: 'move' },
+            { regex: /^(take|get|pick|grab)\s+(.+)$/i, intent: 'take' },
+            { regex: /^(attack|fight|hit)\s*(.*)$/i, intent: 'attack' },
+            { regex: /^(use|consume|eat|drink)\s+(.+)$/i, intent: 'use' }
+        ];
+
+        for (const pattern of patterns) {
+            const match = input.match(pattern.regex);
+            if (match) {
+                return { intent: pattern.intent, params: match.slice(2) };
+            }
+        }
+
+        return null;
+    }
+}
+
+// ===========================
 // Game Initialization
 // ===========================
-let gameState, parser, ui;
+let gameState, parser, ui, soundManager, particleManager, combatManager, nlp;
 
 function initGame() {
     gameState = new GameState();
     gameState.initialize();
+
+    soundManager = new SoundManager();
+    particleManager = new ParticleManager();
+    combatManager = new CombatManager(gameState);
+    nlp = new NaturalLanguageParser();
 
     parser = new CommandParser(gameState);
     ui = new UIManager(gameState);
@@ -733,6 +1098,71 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Theme switcher
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeDropdown = document.getElementById('theme-dropdown');
+
+    themeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        themeDropdown.classList.remove('active');
+    });
+
+    // Theme selection
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const theme = option.dataset.theme;
+
+            // Update active state
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+
+            // Apply theme
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('selectedTheme', theme);
+
+            // Play sound
+            soundManager.play('success');
+
+            // Close dropdown
+            themeDropdown.classList.remove('active');
+        });
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+        document.body.setAttribute('data-theme', savedTheme);
+        const savedOption = document.querySelector(`.theme-option[data-theme="${savedTheme}"]`);
+        if (savedOption) {
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            savedOption.classList.add('active');
+        }
+    }
+
+    // Sound toggle
+    const soundToggle = document.getElementById('sound-toggle');
+    soundToggle.addEventListener('click', () => {
+        const enabled = soundManager.toggle();
+        soundToggle.textContent = enabled ? '🔊' : '🔇';
+        soundToggle.classList.toggle('muted', !enabled);
+
+        if (enabled) {
+            soundManager.play('success');
+        }
+    });
+
+    // Set initial sound button state
+    if (!soundManager.enabled) {
+        soundToggle.textContent = '🔇';
+        soundToggle.classList.add('muted');
+    }
 }
 
 // Start the game when page loads

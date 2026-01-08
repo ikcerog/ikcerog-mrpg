@@ -1,0 +1,228 @@
+/* ===========================
+   THEME DEFINITIONS
+   Easy theme switching system
+   =========================== */
+
+/* Default Theme - Shadow Realms (Dark Fantasy) */
+[data-theme="default"] {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f1419;
+    --bg-panel: #16213e;
+    --bg-panel-header: #0f1419;
+
+    --text-primary: #e4e4e7;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-accent: #60a5fa;
+
+    --border-color: #27272a;
+    --border-accent: #3f3f46;
+
+    --accent-primary: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-success: #10b981;
+    --accent-warning: #f59e0b;
+    --accent-danger: #ef4444;
+
+    --hp-color: #ef4444;
+    --mp-color: #3b82f6;
+    --xp-color: #10b981;
+    --gold-color: #fbbf24;
+}
+
+/* Star Wars Theme */
+[data-theme="starwars"] {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #000000;
+    --bg-panel: #1a1a1a;
+    --bg-panel-header: #0d0d0d;
+
+    --text-primary: #ffe81f;
+    --text-secondary: #ffd700;
+    --text-muted: #998b00;
+    --text-accent: #4a9eff;
+
+    --border-color: #333333;
+    --border-accent: #ffe81f;
+
+    --accent-primary: #4a9eff;
+    --accent-hover: #3a8eef;
+    --accent-success: #00ff00;
+    --accent-warning: #ff6b00;
+    --accent-danger: #ff0000;
+
+    --hp-color: #ff0000;
+    --mp-color: #4a9eff;
+    --xp-color: #00ff00;
+    --gold-color: #ffe81f;
+}
+
+/* Stranger Things Theme (80s Retro) */
+[data-theme="strangerthings"] {
+    --bg-primary: #0d0208;
+    --bg-secondary: #1a0f14;
+    --bg-tertiary: #000000;
+    --bg-panel: #1a0f14;
+    --bg-panel-header: #0d0208;
+
+    --text-primary: #ff0054;
+    --text-secondary: #ff477e;
+    --text-muted: #a8325d;
+    --text-accent: #00d9ff;
+
+    --border-color: #330022;
+    --border-accent: #ff0054;
+
+    --accent-primary: #ff0054;
+    --accent-hover: #cc0044;
+    --accent-success: #00ff41;
+    --accent-warning: #ffb700;
+    --accent-danger: #ff0000;
+
+    --hp-color: #ff0054;
+    --mp-color: #00d9ff;
+    --xp-color: #00ff41;
+    --gold-color: #ffb700;
+}
+
+/* High Fantasy Theme (Traditional D&D) */
+[data-theme="highfantasy"] {
+    --bg-primary: #1a0f0a;
+    --bg-secondary: #2d1810;
+    --bg-tertiary: #0f0805;
+    --bg-panel: #2d1810;
+    --bg-panel-header: #1a0f0a;
+
+    --text-primary: #f5e6d3;
+    --text-secondary: #d4b896;
+    --text-muted: #a08968;
+    --text-accent: #ffd700;
+
+    --border-color: #3d2817;
+    --border-accent: #8b6914;
+
+    --accent-primary: #ffd700;
+    --accent-hover: #ffed4e;
+    --accent-success: #4ade80;
+    --accent-warning: #fb923c;
+    --accent-danger: #dc2626;
+
+    --hp-color: #dc2626;
+    --mp-color: #818cf8;
+    --xp-color: #4ade80;
+    --gold-color: #ffd700;
+}
+
+/* Cyberpunk Theme */
+[data-theme="cyberpunk"] {
+    --bg-primary: #0a0e27;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #050812;
+    --bg-panel: #16213e;
+    --bg-panel-header: #0a0e27;
+
+    --text-primary: #00ffff;
+    --text-secondary: #00cccc;
+    --text-muted: #008888;
+    --text-accent: #ff00ff;
+
+    --border-color: #1a2456;
+    --border-accent: #00ffff;
+
+    --accent-primary: #ff00ff;
+    --accent-hover: #cc00cc;
+    --accent-success: #00ff00;
+    --accent-warning: #ffff00;
+    --accent-danger: #ff0066;
+
+    --hp-color: #ff0066;
+    --mp-color: #00ffff;
+    --xp-color: #00ff00;
+    --gold-color: #ffff00;
+}
+
+/* Matrix Theme (Green Terminal) */
+[data-theme="matrix"] {
+    --bg-primary: #000000;
+    --bg-secondary: #001100;
+    --bg-tertiary: #000000;
+    --bg-panel: #001100;
+    --bg-panel-header: #000000;
+
+    --text-primary: #00ff00;
+    --text-secondary: #00cc00;
+    --text-muted: #008800;
+    --text-accent: #00ff00;
+
+    --border-color: #003300;
+    --border-accent: #00ff00;
+
+    --accent-primary: #00ff00;
+    --accent-hover: #00cc00;
+    --accent-success: #00ff00;
+    --accent-warning: #ffff00;
+    --accent-danger: #ff0000;
+
+    --hp-color: #ff0000;
+    --mp-color: #00ffff;
+    --xp-color: #00ff00;
+    --gold-color: #ffff00;
+}
+
+/* Horror Theme (Resident Evil / Silent Hill) */
+[data-theme="horror"] {
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #1a1313;
+    --bg-tertiary: #000000;
+    --bg-panel: #1a1313;
+    --bg-panel-header: #0d0d0d;
+
+    --text-primary: #d4d4d4;
+    --text-secondary: #8b0000;
+    --text-muted: #555555;
+    --text-accent: #8b0000;
+
+    --border-color: #2a2a2a;
+    --border-accent: #8b0000;
+
+    --accent-primary: #8b0000;
+    --accent-hover: #660000;
+    --accent-success: #556b2f;
+    --accent-warning: #ff8c00;
+    --accent-danger: #8b0000;
+
+    --hp-color: #8b0000;
+    --mp-color: #4169e1;
+    --xp-color: #556b2f;
+    --gold-color: #daa520;
+}
+
+/* Neon Theme (Outrun / Vaporwave) */
+[data-theme="neon"] {
+    --bg-primary: #120458;
+    --bg-secondary: #2d1b69;
+    --bg-tertiary: #0a0230;
+    --bg-panel: #2d1b69;
+    --bg-panel-header: #120458;
+
+    --text-primary: #ffffff;
+    --text-secondary: #ff71ce;
+    --text-muted: #b967ff;
+    --text-accent: #01cdfe;
+
+    --border-color: #2d1b69;
+    --border-accent: #ff71ce;
+
+    --accent-primary: #ff71ce;
+    --accent-hover: #ff3cac;
+    --accent-success: #05ffa1;
+    --accent-warning: #fffb96;
+    --accent-danger: #ff006e;
+
+    --hp-color: #ff006e;
+    --mp-color: #01cdfe;
+    --xp-color: #05ffa1;
+    --gold-color: #fffb96;
+}

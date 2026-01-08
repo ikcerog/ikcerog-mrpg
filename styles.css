@@ -549,4 +549,180 @@ button:hover {
     .terminal-panel {
         border: none;
     }
+
+    .game-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        padding: var(--spacing-md);
+    }
+
+    .quick-commands {
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .quick-cmd {
+        flex: 1 1 calc(50% - var(--spacing-md));
+        min-width: 100px;
+        padding: var(--spacing-md);
+        font-size: 1rem;
+    }
+}
+
+/* ===========================
+   Theme Switcher
+   =========================== */
+.theme-selector {
+    position: fixed;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: 1000;
+}
+
+.theme-btn {
+    background-color: var(--bg-panel);
+    border: var(--border-width) solid var(--border-accent);
+    color: var(--text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    font-size: 0.875rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+}
+
+.theme-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--spacing-xs);
+    background-color: var(--bg-panel);
+    border: var(--border-width) solid var(--border-accent);
+    border-radius: var(--border-radius);
+    min-width: 200px;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.theme-dropdown.active {
+    display: block;
+}
+
+.theme-option {
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    border-bottom: var(--border-width) solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-option:last-child {
+    border-bottom: none;
+}
+
+.theme-option:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.theme-option.active {
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.theme-icon {
+    font-size: 1.2rem;
+}
+
+/* ===========================
+   Particle Effects
+   =========================== */
+.particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 1.5rem;
+    animation: particle-float 2s ease-out forwards;
+    z-index: 9999;
+}
+
+@keyframes particle-float {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) scale(0.5);
+        opacity: 0;
+    }
+}
+
+/* ===========================
+   Animations & Transitions
+   =========================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.output-line {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.combat-active {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+/* ===========================
+   Sound Toggle
+   =========================== */
+.sound-toggle {
+    position: fixed;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    background-color: var(--bg-panel);
+    border: var(--border-width) solid var(--border-accent);
+    color: var(--text-primary);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 999;
+    transition: all var(--transition-fast);
+}
+
+.sound-toggle:hover {
+    background-color: var(--accent-primary);
+    transform: scale(1.1);
+}
+
+.sound-toggle.muted {
+    opacity: 0.5;
 }
