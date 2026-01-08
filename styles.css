@@ -576,7 +576,7 @@ button:hover {
 .pack-selector {
     position: fixed;
     top: var(--spacing-md);
-    left: var(--spacing-md);
+    right: calc(var(--spacing-md) + 120px); /* Position to left of theme selector */
     z-index: 1000;
 }
 
