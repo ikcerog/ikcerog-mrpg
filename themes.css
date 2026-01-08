@@ -29,6 +29,8 @@
     --mp-color: #3b82f6;
     --xp-color: #10b981;
     --gold-color: #fbbf24;
+
+    --button-text: #ffffff;
 }
 
 /* Star Wars Theme */
@@ -57,6 +59,8 @@
     --mp-color: #4a9eff;
     --xp-color: #00ff00;
     --gold-color: #ffe81f;
+
+    --button-text: #000000;
 }
 
 /* Stranger Things Theme (80s Retro) */
@@ -85,6 +89,9 @@
     --mp-color: #00d9ff;
     --xp-color: #00ff41;
     --gold-color: #ffb700;
+
+    /* Button text should be white/cyan for contrast against pink buttons */
+    --button-text: #ffffff;
 }
 
 /* High Fantasy Theme (Traditional D&D) */
@@ -113,6 +120,8 @@
     --mp-color: #818cf8;
     --xp-color: #4ade80;
     --gold-color: #ffd700;
+
+    --button-text: #1a0f0a;
 }
 
 /* Cyberpunk Theme */
@@ -141,6 +150,8 @@
     --mp-color: #00ffff;
     --xp-color: #00ff00;
     --gold-color: #ffff00;
+
+    --button-text: #ffffff;
 }
 
 /* Matrix Theme (Green Terminal) */
@@ -169,6 +180,8 @@
     --mp-color: #00ffff;
     --xp-color: #00ff00;
     --gold-color: #ffff00;
+
+    --button-text: #000000;
 }
 
 /* Horror Theme (Resident Evil / Silent Hill) */
@@ -197,6 +210,8 @@
     --mp-color: #4169e1;
     --xp-color: #556b2f;
     --gold-color: #daa520;
+
+    --button-text: #ffffff;
 }
 
 /* Neon Theme (Outrun / Vaporwave) */
@@ -225,4 +240,6 @@
     --mp-color: #01cdfe;
     --xp-color: #05ffa1;
     --gold-color: #fffb96;
+
+    --button-text: #000000;
 }
