@@ -980,9 +980,190 @@ class NaturalLanguageParser {
 }
 
 // ===========================
+// Layout Manager (Drag/Resize Panels)
+// ===========================
+class LayoutManager {
+    constructor() {
+        this.gameMain = document.getElementById('game-main');
+        this.panels = Array.from(document.querySelectorAll('.panel[draggable="true"]'));
+        this.draggedPanel = null;
+        this.resizePanel = null;
+        this.resizeStartX = 0;
+        this.resizeStartWidth = 0;
+        this.setupDragAndDrop();
+        this.setupResize();
+        this.loadLayout();
+    }
+
+    setupDragAndDrop() {
+        this.panels.forEach(panel => {
+            panel.addEventListener('dragstart', (e) => {
+                this.draggedPanel = panel;
+                panel.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', panel.innerHTML);
+            });
+
+            panel.addEventListener('dragend', (e) => {
+                panel.classList.remove('dragging');
+                this.panels.forEach(p => p.classList.remove('drag-over'));
+            });
+
+            panel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                if (this.draggedPanel !== panel) {
+                    panel.classList.add('drag-over');
+                }
+            });
+
+            panel.addEventListener('dragleave', (e) => {
+                panel.classList.remove('drag-over');
+            });
+
+            panel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                panel.classList.remove('drag-over');
+
+                if (this.draggedPanel !== panel) {
+                    // Swap panels
+                    const draggedIndex = this.panels.indexOf(this.draggedPanel);
+                    const targetIndex = this.panels.indexOf(panel);
+
+                    if (draggedIndex < targetIndex) {
+                        panel.parentNode.insertBefore(this.draggedPanel, panel.nextSibling);
+                    } else {
+                        panel.parentNode.insertBefore(this.draggedPanel, panel);
+                    }
+
+                    // Update panels array
+                    this.panels = Array.from(document.querySelectorAll('.panel[draggable="true"]'));
+                    this.saveLayout();
+                }
+            });
+        });
+    }
+
+    setupResize() {
+        const resizeHandles = document.querySelectorAll('.resize-handle');
+
+        resizeHandles.forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const panelId = handle.dataset.resizePanel;
+                this.resizePanel = document.querySelector(`[data-panel-id="${panelId}"]`);
+                this.resizeSide = handle.dataset.resizeSide;
+                this.resizeStartX = e.clientX;
+                this.resizeStartWidth = this.resizePanel.offsetWidth;
+
+                handle.classList.add('resizing');
+                this.resizePanel.classList.add('resizing');
+
+                document.addEventListener('mousemove', this.handleResize);
+                document.addEventListener('mouseup', this.handleResizeEnd);
+            });
+        });
+    }
+
+    handleResize = (e) => {
+        if (!this.resizePanel) return;
+
+        const delta = e.clientX - this.resizeStartX;
+        let newWidth;
+
+        if (this.resizeSide === 'right') {
+            newWidth = this.resizeStartWidth + delta;
+        } else {
+            newWidth = this.resizeStartWidth - delta;
+        }
+
+        // Min width constraint
+        newWidth = Math.max(200, Math.min(newWidth, window.innerWidth * 0.6));
+
+        this.resizePanel.style.width = newWidth + 'px';
+        this.updateGridColumns();
+    }
+
+    handleResizeEnd = (e) => {
+        if (this.resizePanel) {
+            document.querySelector('.resize-handle.resizing')?.classList.remove('resizing');
+            this.resizePanel.classList.remove('resizing');
+            this.saveLayout();
+            this.resizePanel = null;
+        }
+
+        document.removeEventListener('mousemove', this.handleResize);
+        document.removeEventListener('mouseup', this.handleResizeEnd);
+    }
+
+    updateGridColumns() {
+        const panels = Array.from(this.gameMain.children);
+        const columns = panels.map(panel => {
+            if (panel.style.width) {
+                return panel.style.width;
+            }
+            return panel.classList.contains('terminal-panel') ? '1fr' : 'auto';
+        }).join(' ');
+
+        this.gameMain.style.gridTemplateColumns = columns;
+    }
+
+    saveLayout() {
+        const layout = {
+            order: this.panels.map(p => p.dataset.panelId),
+            widths: {}
+        };
+
+        this.panels.forEach(panel => {
+            if (panel.style.width) {
+                layout.widths[panel.dataset.panelId] = panel.style.width;
+            }
+        });
+
+        localStorage.setItem('panelLayout', JSON.stringify(layout));
+    }
+
+    loadLayout() {
+        const savedLayout = localStorage.getItem('panelLayout');
+        if (!savedLayout) return;
+
+        try {
+            const layout = JSON.parse(savedLayout);
+
+            // Restore panel order
+            if (layout.order) {
+                layout.order.forEach((panelId, index) => {
+                    const panel = document.querySelector(`[data-panel-id="${panelId}"]`);
+                    if (panel && panel.parentNode === this.gameMain) {
+                        this.gameMain.appendChild(panel);
+                    }
+                });
+            }
+
+            // Restore widths
+            if (layout.widths) {
+                Object.entries(layout.widths).forEach(([panelId, width]) => {
+                    const panel = document.querySelector(`[data-panel-id="${panelId}"]`);
+                    if (panel) {
+                        panel.style.width = width;
+                    }
+                });
+                this.updateGridColumns();
+            }
+
+            // Update panels array
+            this.panels = Array.from(document.querySelectorAll('.panel[draggable="true"]'));
+        } catch (e) {
+            console.error('Failed to load panel layout:', e);
+        }
+    }
+}
+
+// ===========================
 // Game Initialization
 // ===========================
-let gameState, parser, ui, soundManager, particleManager, combatManager, nlp, contentPackManager;
+let gameState, parser, ui, soundManager, particleManager, combatManager, nlp, contentPackManager, layoutManager;
 let eventListenersSetup = false; // Flag to track if event listeners are already set up
 
 function initGame() {
@@ -1016,6 +1197,7 @@ function initGame() {
     // Setup event listeners only once
     if (!eventListenersSetup) {
         setupEventListeners();
+        layoutManager = new LayoutManager();
         eventListenersSetup = true;
     }
 }

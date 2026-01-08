@@ -153,6 +153,9 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
 .panel-content {
@@ -160,6 +163,64 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     padding: var(--spacing-md);
+}
+
+/* Draggable Panel Styles */
+.drag-indicator {
+    color: var(--text-muted);
+    cursor: grab;
+    user-select: none;
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+}
+
+.panel-header:hover .drag-indicator {
+    opacity: 1;
+}
+
+.panel[draggable="true"] {
+    position: relative;
+}
+
+.panel.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.panel.drag-over {
+    border-left: 3px solid var(--accent-primary);
+}
+
+/* Resize Handles */
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+    z-index: 10;
+    background: transparent;
+    transition: background-color var(--transition-fast);
+}
+
+.resize-handle:hover {
+    background-color: var(--accent-primary);
+}
+
+.resize-handle-left {
+    left: 0;
+}
+
+.resize-handle-right {
+    right: 0;
+}
+
+.resize-handle.resizing {
+    background-color: var(--accent-primary);
+}
+
+.panel.resizing {
+    user-select: none;
 }
 
 /* Custom Scrollbar */
