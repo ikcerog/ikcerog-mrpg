@@ -11,10 +11,10 @@ class GameState {
         this.time = { day: 1, hour: 8 };
     }
 
-    initialize() {
+    initialize(contentPack) {
         this.player = new Player('Adventurer');
-        this.world = new World();
-        this.currentRoom = this.world.getRoom('town_square');
+        this.world = new World(contentPack);
+        this.currentRoom = this.world.getRoom(this.world.getStartRoom());
     }
 
     save() {
@@ -139,93 +139,62 @@ class Room {
 }
 
 class World {
-    constructor() {
+    constructor(contentPack) {
         this.rooms = new Map();
+        this.contentPack = contentPack;
         this.initializeWorld();
     }
 
     initializeWorld() {
-        // Town Square
-        this.addRoom(new Room(
-            'town_square',
-            'Town Square',
-            'A bustling town square with a fountain in the center. Merchants hawk their wares while townsfolk go about their business.',
-            { north: 'market', south: 'tavern', east: 'temple', west: 'forest_edge' }
-        ));
+        if (!this.contentPack || !this.contentPack.data || !this.contentPack.data.rooms) {
+            console.error('Invalid content pack');
+            return;
+        }
 
-        // Market
-        this.addRoom(new Room(
-            'market',
-            'Marketplace',
-            'Colorful stalls line the cobblestone streets. The smell of fresh bread and exotic spices fills the air.',
-            { south: 'town_square', east: 'blacksmith' }
-        ));
+        // Load rooms from content pack
+        const packData = this.contentPack.data;
 
-        // Blacksmith
-        this.addRoom(new Room(
-            'blacksmith',
-            'Blacksmith Shop',
-            'The rhythmic clanging of hammer on anvil echoes through the hot workshop. Weapons and armor line the walls.',
-            { west: 'market' }
-        ));
+        packData.rooms.forEach(roomData => {
+            const room = new Room(
+                roomData.id,
+                roomData.name,
+                roomData.description,
+                roomData.exits
+            );
 
-        // Tavern
-        this.addRoom(new Room(
-            'tavern',
-            'The Rusty Dragon Tavern',
-            'A warm, inviting tavern filled with laughter and the smell of roasted meat. Adventurers trade stories over mugs of ale.',
-            { north: 'town_square' }
-        ));
+            // Add items
+            if (roomData.items && roomData.items.length > 0) {
+                room.items.push(...roomData.items);
+            }
 
-        // Temple
-        this.addRoom(new Room(
-            'temple',
-            'Temple of Light',
-            'Sunlight streams through stained glass windows, illuminating an altar of white marble. A sense of peace pervades the sacred space.',
-            { west: 'town_square' }
-        ));
+            // Add enemies
+            if (roomData.enemies && roomData.enemies.length > 0) {
+                roomData.enemies.forEach(enemyData => {
+                    room.enemies.push(new Enemy(
+                        enemyData.name,
+                        enemyData.level,
+                        enemyData.hp,
+                        enemyData.damage,
+                        enemyData.xpReward,
+                        enemyData.goldReward
+                    ));
+                });
+            }
 
-        // Forest Edge
-        this.addRoom(new Room(
-            'forest_edge',
-            'Edge of the Dark Forest',
-            'The welcoming lights of town give way to dark, ancient trees. Strange sounds echo from the depths of the forest.',
-            { east: 'town_square', west: 'forest_path' }
-        ));
+            this.addRoom(room);
+        });
+    }
 
-        // Forest Path
-        this.addRoom(new Room(
-            'forest_path',
-            'Forest Path',
-            'A narrow path winds between twisted trees. The canopy blocks most sunlight, creating an eerie twilight.',
-            { east: 'forest_edge', west: 'forest_clearing' }
-        ));
+    getStartRoom() {
+        return this.contentPack.data.startRoom || 'town_square';
+    }
 
-        // Forest Clearing
-        this.addRoom(new Room(
-            'forest_clearing',
-            'Forest Clearing',
-            'A small clearing where sunlight breaks through the trees. Wild flowers grow around a weathered stone circle.',
-            { east: 'forest_path', north: 'cave_entrance' }
-        ));
+    getCurrencyName() {
+        return this.contentPack.data.currencyName || 'Gold';
+    }
 
-        // Cave Entrance
-        this.addRoom(new Room(
-            'cave_entrance',
-            'Cave Entrance',
-            'A dark cave mouth yawns before you, promising danger and treasure in equal measure. Cold air flows from within.',
-            { south: 'forest_clearing' }
-        ));
-
-        // Add some items to rooms
-        this.getRoom('market').items.push({ name: 'Apple', type: 'food', effect: 'heal', value: 5 });
-        this.getRoom('forest_clearing').items.push({ name: 'Healing Herb', type: 'herb', effect: 'heal', value: 15 });
-        this.getRoom('cave_entrance').items.push({ name: 'Rusty Sword', type: 'weapon', damage: 5, value: 10 });
-
-        // Add enemies to dangerous areas
-        this.getRoom('forest_path').enemies.push(new Enemy('Wolf', 1, 30, 8, 20, 5));
-        this.getRoom('forest_clearing').enemies.push(new Enemy('Giant Spider', 2, 50, 12, 35, 10));
-        this.getRoom('cave_entrance').enemies.push(new Enemy('Cave Troll', 3, 80, 18, 60, 25));
+    getWelcomeMessage() {
+        return this.contentPack.data.welcomeMessage || 'Welcome to the game!';
     }
 
     addRoom(room) {
@@ -1007,11 +976,15 @@ class NaturalLanguageParser {
 // ===========================
 // Game Initialization
 // ===========================
-let gameState, parser, ui, soundManager, particleManager, combatManager, nlp;
+let gameState, parser, ui, soundManager, particleManager, combatManager, nlp, contentPackManager;
 
 function initGame() {
+    // Initialize content pack manager
+    contentPackManager = new ContentPackManager();
+    const currentPack = contentPackManager.getCurrentPack();
+
     gameState = new GameState();
-    gameState.initialize();
+    gameState.initialize(currentPack);
 
     soundManager = new SoundManager();
     particleManager = new ParticleManager();
@@ -1021,16 +994,38 @@ function initGame() {
     parser = new CommandParser(gameState);
     ui = new UIManager(gameState);
 
+    // Update currency display
+    updateCurrencyDisplay();
+
     // Try to load saved game
     if (gameState.load()) {
         ui.initialize();
         ui.addOutput('success', 'Saved game loaded!');
     } else {
         ui.initialize();
+        ui.addOutput('', currentPack.data.welcomeMessage);
     }
 
     // Setup event listeners
     setupEventListeners();
+}
+
+function updateCurrencyDisplay() {
+    const currencyName = gameState.world.getCurrencyName();
+    const goldDisplay = document.querySelector('.gold-display');
+    if (goldDisplay) {
+        goldDisplay.innerHTML = `${currencyName}: <span id="gold-amount">0</span>`;
+    }
+}
+
+function restartGame() {
+    // Clear the output
+    if (ui) {
+        ui.clearOutput();
+    }
+
+    // Reinitialize the game
+    initGame();
 }
 
 function setupEventListeners() {
@@ -1145,6 +1140,71 @@ function setupEventListeners() {
             savedOption.classList.add('active');
         }
     }
+
+    // Content Pack switcher
+    const packToggle = document.getElementById('pack-toggle');
+    const packDropdown = document.getElementById('pack-dropdown');
+
+    packToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        packDropdown.classList.toggle('active');
+        // Close theme dropdown if open
+        themeDropdown.classList.remove('active');
+    });
+
+    // Pack selection
+    document.querySelectorAll('.pack-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const packId = option.dataset.pack;
+
+            // Update active state
+            document.querySelectorAll('.pack-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+
+            // Load the new content pack
+            contentPackManager.loadPack(packId);
+
+            // Optionally auto-apply matching visual theme
+            const suggestedTheme = contentPackManager.getSuggestedVisualTheme(packId);
+            document.body.setAttribute('data-theme', suggestedTheme);
+            localStorage.setItem('selectedTheme', suggestedTheme);
+
+            // Update theme selector UI
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            const matchingThemeOption = document.querySelector(`.theme-option[data-theme="${suggestedTheme}"]`);
+            if (matchingThemeOption) {
+                matchingThemeOption.classList.add('active');
+            }
+
+            // Play sound
+            soundManager.play('success');
+
+            // Close dropdown
+            packDropdown.classList.remove('active');
+
+            // Restart the game with new content
+            restartGame();
+
+            // Show notification
+            ui.addOutput('success', `Switched to ${contentPackManager.getCurrentPack().name}!`);
+        });
+    });
+
+    // Load saved pack selection in UI
+    const savedPack = localStorage.getItem('selectedContentPack') || 'fantasy';
+    const savedPackOption = document.querySelector(`.pack-option[data-pack="${savedPack}"]`);
+    if (savedPackOption) {
+        document.querySelectorAll('.pack-option').forEach(opt => opt.classList.remove('active'));
+        savedPackOption.classList.add('active');
+    }
+
+    // Close pack dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.pack-selector')) {
+            packDropdown.classList.remove('active');
+        }
+    });
 
     // Sound toggle
     const soundToggle = document.getElementById('sound-toggle');

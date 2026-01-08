@@ -8,7 +8,37 @@
     <link rel="stylesheet" href="themes.css">
 </head>
 <body data-theme="default">
-    <!-- Theme Selector -->
+    <!-- Content Pack Selector -->
+    <div class="pack-selector">
+        <button class="pack-btn" id="pack-toggle">
+            <span class="pack-icon">🎮</span>
+            <span>World</span>
+        </button>
+        <div class="pack-dropdown" id="pack-dropdown">
+            <div class="pack-option active" data-pack="fantasy">
+                <span class="pack-icon">🌑</span>
+                <span>Shadow Realms</span>
+            </div>
+            <div class="pack-option" data-pack="starwars">
+                <span class="pack-icon">⚔️</span>
+                <span>Star Wars</span>
+            </div>
+            <div class="pack-option" data-pack="strangerthings">
+                <span class="pack-icon">🔦</span>
+                <span>Stranger Things</span>
+            </div>
+            <div class="pack-option" data-pack="highfantasy">
+                <span class="pack-icon">🐉</span>
+                <span>High Fantasy</span>
+            </div>
+            <div class="pack-option" data-pack="cyberpunk">
+                <span class="pack-icon">🤖</span>
+                <span>Cyberpunk</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Theme Selector -->
     <div class="theme-selector">
         <button class="theme-btn" id="theme-toggle">
             <span class="theme-icon">🎨</span>
@@ -198,6 +228,7 @@
         </footer>
     </div>
 
+    <script src="content-packs.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
