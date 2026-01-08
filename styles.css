@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Electrolize&display=swap');
+
 /* ===========================
    Theme Variables - Easy Skinning
    =========================== */
@@ -37,8 +40,8 @@
     --spacing-xl: 2rem;
 
     /* Typography */
-    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-mono: 'Courier New', Courier, monospace;
+    --font-main: 'Electrolize', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: 'Ubuntu Mono', Courier, monospace;
 
     /* Borders & Radius */
     --border-radius: 0.375rem;
