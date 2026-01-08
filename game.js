@@ -977,6 +977,7 @@ class NaturalLanguageParser {
 // Game Initialization
 // ===========================
 let gameState, parser, ui, soundManager, particleManager, combatManager, nlp, contentPackManager;
+let eventListenersSetup = false; // Flag to track if event listeners are already set up
 
 function initGame() {
     // Initialize content pack manager
@@ -1006,8 +1007,11 @@ function initGame() {
         ui.addOutput('', currentPack.data.welcomeMessage);
     }
 
-    // Setup event listeners
-    setupEventListeners();
+    // Setup event listeners only once
+    if (!eventListenersSetup) {
+        setupEventListeners();
+        eventListenersSetup = true;
+    }
 }
 
 function updateCurrencyDisplay() {
