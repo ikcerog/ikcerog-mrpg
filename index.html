@@ -5,8 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shadow Realms - A Web MUD</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="themes.css">
 </head>
-<body>
+<body data-theme="default">
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <button class="theme-btn" id="theme-toggle">
+            <span class="theme-icon">🎨</span>
+            <span>Theme</span>
+        </button>
+        <div class="theme-dropdown" id="theme-dropdown">
+            <div class="theme-option active" data-theme="default">
+                <span class="theme-icon">🌑</span>
+                <span>Shadow Realms</span>
+            </div>
+            <div class="theme-option" data-theme="starwars">
+                <span class="theme-icon">⚔️</span>
+                <span>Star Wars</span>
+            </div>
+            <div class="theme-option" data-theme="strangerthings">
+                <span class="theme-icon">🔦</span>
+                <span>Stranger Things</span>
+            </div>
+            <div class="theme-option" data-theme="highfantasy">
+                <span class="theme-icon">🐉</span>
+                <span>High Fantasy</span>
+            </div>
+            <div class="theme-option" data-theme="cyberpunk">
+                <span class="theme-icon">🤖</span>
+                <span>Cyberpunk</span>
+            </div>
+            <div class="theme-option" data-theme="matrix">
+                <span class="theme-icon">💻</span>
+                <span>Matrix</span>
+            </div>
+            <div class="theme-option" data-theme="horror">
+                <span class="theme-icon">👻</span>
+                <span>Horror</span>
+            </div>
+            <div class="theme-option" data-theme="neon">
+                <span class="theme-icon">🌈</span>
+                <span>Neon</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Toggle -->
+    <button class="sound-toggle" id="sound-toggle" title="Toggle Sound">
+        🔊
+    </button>
+
     <div class="game-container">
         <!-- Header -->
         <header class="game-header">
