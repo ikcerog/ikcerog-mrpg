@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Realms - A Web MUD</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>Shadow Realms</h1>
+            <div class="header-info">
+                <span id="game-time">Day 1, 08:00</span>
+                <span id="connection-status">◉ Connected</span>
+            </div>
+        </header>
+
+        <!-- Main game area -->
+        <main class="game-main">
+            <!-- Left panel: Map -->
+            <aside class="map-panel panel">
+                <div class="panel-header">
+                    <h2>Map</h2>
+                    <button class="toggle-btn" data-panel="map">−</button>
+                </div>
+                <div class="panel-content" id="map-content">
+                    <div id="map-display"></div>
+                    <div class="map-legend">
+                        <div><span class="legend-icon current">@</span> You</div>
+                        <div><span class="legend-icon room">□</span> Room</div>
+                        <div><span class="legend-icon path">─</span> Path</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center panel: Terminal/Output -->
+            <section class="terminal-panel panel">
+                <div class="panel-header">
+                    <h2>Terminal</h2>
+                    <button class="clear-btn" id="clear-output">Clear</button>
+                </div>
+                <div class="panel-content">
+                    <div id="output" class="terminal-output"></div>
+                    <div class="terminal-input-area">
+                        <span class="prompt">&gt;</span>
+                        <input
+                            type="text"
+                            id="command-input"
+                            class="command-input"
+                            autocomplete="off"
+                            placeholder="Enter command (type 'help' for commands)"
+                            autofocus
+                        >
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right panel: Character & Inventory -->
+            <aside class="info-panel panel">
+                <div class="panel-header">
+                    <h2>Character</h2>
+                    <button class="toggle-btn" data-panel="info">−</button>
+                </div>
+                <div class="panel-content" id="info-content">
+                    <!-- Character Stats -->
+                    <div class="character-stats">
+                        <div class="char-name" id="char-name">Adventurer</div>
+                        <div class="char-level">Level <span id="char-level">1</span></div>
+
+                        <div class="stat-bar">
+                            <label>HP</label>
+                            <div class="bar">
+                                <div class="bar-fill hp-bar" id="hp-bar" style="width: 100%"></div>
+                                <span class="bar-text" id="hp-text">100/100</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-bar">
+                            <label>MP</label>
+                            <div class="bar">
+                                <div class="bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
+                                <span class="bar-text" id="mp-text">50/50</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-bar">
+                            <label>XP</label>
+                            <div class="bar">
+                                <div class="bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
+                                <span class="bar-text" id="xp-text">0/100</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">STR</span>
+                                <span class="stat-value" id="stat-str">10</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">DEX</span>
+                                <span class="stat-value" id="stat-dex">10</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">INT</span>
+                                <span class="stat-value" id="stat-int">10</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">WIS</span>
+                                <span class="stat-value" id="stat-wis">10</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory -->
+                    <div class="inventory">
+                        <h3>Inventory</h3>
+                        <div class="inventory-grid" id="inventory-grid">
+                            <div class="inventory-slot empty"></div>
+                            <div class="inventory-slot empty"></div>
+                            <div class="inventory-slot empty"></div>
+                            <div class="inventory-slot empty"></div>
+                            <div class="inventory-slot empty"></div>
+                            <div class="inventory-slot empty"></div>
+                        </div>
+                        <div class="gold-display">
+                            Gold: <span id="gold-amount">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Info -->
+                    <div class="quick-info">
+                        <div class="info-item">
+                            <strong>Location:</strong> <span id="current-location">Town Square</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="game-footer">
+            <div class="quick-commands">
+                <button class="quick-cmd" data-cmd="look">Look</button>
+                <button class="quick-cmd" data-cmd="inventory">Inventory</button>
+                <button class="quick-cmd" data-cmd="stats">Stats</button>
+                <button class="quick-cmd" data-cmd="help">Help</button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
