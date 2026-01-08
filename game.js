@@ -9,9 +9,11 @@ class GameState {
         this.commandHistory = [];
         this.historyIndex = -1;
         this.time = { day: 1, hour: 8 };
+        this.contentPackId = null;
     }
 
     initialize(contentPack) {
+        this.contentPackId = contentPack.id;
         this.player = new Player('Adventurer');
         this.world = new World(contentPack);
         this.currentRoom = this.world.getRoom(this.world.getStartRoom());
@@ -23,11 +25,15 @@ class GameState {
             currentRoom: this.currentRoom.id,
             time: this.time
         };
-        localStorage.setItem('mudSave', JSON.stringify(saveData));
+        // Save with world-specific key
+        const saveKey = `mudSave_${this.contentPackId}`;
+        localStorage.setItem(saveKey, JSON.stringify(saveData));
     }
 
     load() {
-        const saveData = localStorage.getItem('mudSave');
+        // Load from world-specific key
+        const saveKey = `mudSave_${this.contentPackId}`;
+        const saveData = localStorage.getItem(saveKey);
         if (saveData) {
             const data = JSON.parse(saveData);
             this.player.deserialize(data.player);
@@ -1023,6 +1029,11 @@ function updateCurrencyDisplay() {
 }
 
 function restartGame() {
+    // Save current world state before switching
+    if (gameState && gameState.player && gameState.contentPackId) {
+        gameState.save();
+    }
+
     // Clear the output
     if (ui) {
         ui.clearOutput();
@@ -1187,11 +1198,12 @@ function setupEventListeners() {
             // Close dropdown
             packDropdown.classList.remove('active');
 
-            // Restart the game with new content
+            // Restart the game with new content (saves current world first)
             restartGame();
 
             // Show notification
             ui.addOutput('success', `Switched to ${contentPackManager.getCurrentPack().name}!`);
+            ui.addOutput('', 'Your previous world progress has been saved.');
         });
     });
 
